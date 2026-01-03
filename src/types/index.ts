@@ -32,9 +32,9 @@ export interface KYCData {
 }
 
 export interface Service {
-  id: string
-  customerId: string
-  packageId: string
+  id: number
+  customerId: number
+  packageId: number
   username: string
   password: string
   status: ServiceStatus
@@ -45,6 +45,14 @@ export interface Service {
   macAddress?: string
   createdAt: Date
   updatedAt: Date
+  customer?: {
+    id: number
+    name: string
+  }
+  package?: {
+    id: number
+    name: string
+  }
 }
 
 export interface Package {

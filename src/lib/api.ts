@@ -156,6 +156,9 @@ export const api = {
     suspend: (id: string) => apiClient.post(`/services/${id}/suspend`),
     activate: (id: string) => apiClient.post(`/services/${id}/activate`),
     terminate: (id: string) => apiClient.post(`/services/${id}/terminate`),
+    suspendService: (id: number) => apiClient.post(`/services/${id}/suspend`),
+    activateService: (id: number) => apiClient.post(`/services/${id}/activate`),
+    terminateService: (id: number) => apiClient.post(`/services/${id}/terminate`),
   },
   packages: {
     getAll: (params?: any) => apiClient.getPaginated('/packages', params),
