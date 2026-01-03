@@ -8,14 +8,22 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { api } from "@/lib/api"
-import { Customer, CustomerStatus } from "@/types"
+import { Customer } from "@/types"
 import { toast } from "@/components/ui/use-toast"
+
+const CustomerStatus = {
+  ACTIVE: 'active' as const,
+  INACTIVE: 'inactive' as const,
+  SUSPENDED: 'suspended' as const,
+  TERMINATED: 'terminated' as const,
+  PENDING: 'pending' as const
+}
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<CustomerStatus | "">("")
+  const [statusFilter, setStatusFilter] = useState<string>("")
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -26,17 +34,17 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true)
-      const response = await api.customers.getCustomers({
+      const response = await api.customers.getAll({
         search: search || undefined,
         status: statusFilter || undefined,
         skip: (pagination.page - 1) * pagination.limit,
         limit: pagination.limit
       })
       
-      setCustomers(response.data.data)
+      setCustomers(response.data as Customer[])
       setPagination(prev => ({
         ...prev,
-        ...response.data.pagination
+        ...(response.data as any).pagination
       }))
     } catch (error) {
       toast({
@@ -53,15 +61,16 @@ export default function CustomersPage() {
     fetchCustomers()
   }, [search, statusFilter, pagination.page])
 
-  const getStatusBadge = (status: CustomerStatus) => {
+  const getStatusBadge = (status: string) => {
     const variants = {
       [CustomerStatus.ACTIVE]: "bg-green-100 text-green-800",
-      [CustomerStatus.INACTIVE]: "bg-red-100 text-red-800",
+      [CustomerStatus.INACTIVE]: "bg-gray-100 text-gray-800",
       [CustomerStatus.SUSPENDED]: "bg-yellow-100 text-yellow-800",
-      [CustomerStatus.TERMINATED]: "bg-gray-100 text-gray-800"
+      [CustomerStatus.TERMINATED]: "bg-red-100 text-red-800",
+      [CustomerStatus.PENDING]: "bg-blue-100 text-blue-800"
     }
     return (
-      <Badge className={variants[status]}>
+      <Badge className={variants[status as keyof typeof variants]}>
         {status}
       </Badge>
     )
@@ -86,7 +95,7 @@ export default function CustomersPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="max-w-sm"
             />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value || "")}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
@@ -96,6 +105,7 @@ export default function CustomersPage() {
                 <SelectItem value={CustomerStatus.INACTIVE}>Inactive</SelectItem>
                 <SelectItem value={CustomerStatus.SUSPENDED}>Suspended</SelectItem>
                 <SelectItem value={CustomerStatus.TERMINATED}>Terminated</SelectItem>
+                <SelectItem value={CustomerStatus.PENDING}>Pending</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -132,7 +142,7 @@ export default function CustomersPage() {
                       <TableCell>{customer.phone}</TableCell>
                       <TableCell>{getStatusBadge(customer.status)}</TableCell>
                       <TableCell>
-                        {new Date(customer.created_at).toLocaleDateString()}
+                        {new Date(customer.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
